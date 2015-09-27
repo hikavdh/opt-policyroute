@@ -1,0 +1,5 @@
+PACKAGE="policyroute"
+CATEGORY="3.10"
+BRANCH="stable"
+ARCH="x86"
+REVISION=""

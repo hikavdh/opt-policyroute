@@ -1,0 +1,28 @@
+﻿#------------------------------------------------------------------------------
+# opt/policyroute.txt - Creation of policy routing rules              3.10.3
+#
+# Creation:     2015-09-27 Hika van den Hoven <hikavdh at gmail dot com>
+# Last Update:  $$
+#
+# Copyright (c) 2015 - Hika van den Hoven
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#------------------------------------------------------------------------------
+
+OPT_POLICYROUTE                      -            	-                 YESNO "no"
+
+POLICYROUTE_N                OPT_POLICYROUTE        -                 NUMERIC
+POLICYROUTE_%_TABLE_NAME     OPT_POLICYROUTE  POLICYROUTE_N           NOTEMPTY
+POLICYROUTE_%_DEFAULT_ROUTE  OPT_POLICYROUTE  POLICYROUTE_N	          IPADDR
+
+POLICYROUTE_%_HOST_N         OPT_POLICYROUTE  POLICYROUTE_N           NUMERIC
+POLICYROUTE_%_HOST_%         OPT_POLICYROUTE  POLICYROUTE_%_HOST_N    IPADDR
+
+POLICYROUTE_%_ROUTE_N        OPT_POLICYROUTE  POLICYROUTE_N           NUMERIC
+POLICYROUTE_%_ROUTE_%        OPT_POLICYROUTE  POLICYROUTE_%_ROUTE_N   IP_ROUTE
+
+POLICYROUTE_%_DEVICE_N       OPT_POLICYROUTE  POLICYROUTE_N           NUMERIC
+POLICYROUTE_%_DEVICE_%       OPT_POLICYROUTE  POLICYROUTE_%_DEVICE_N  NUMERIC

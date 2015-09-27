@@ -1,0 +1,40 @@
+#------------------------------------------------------------------------------
+# opt/policyroute.txt - Creation of policy routing rules              3.10.3
+#
+# Creation:     2015-09-27 Hika van den Hoven <hikavdh at gmail dot com>
+# Last Update:  $$
+#
+# Copyright (c) 2015 - Hika van den Hoven
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#------------------------------------------------------------------------------
+OPT_POLICYROUTE='no'
+
+POLICYROUTE_N='1'
+POLICYROUTE_1_TABLE_NAME='ziggo'
+POLICYROUTE_1_DEFAULT_ROUTE='192.168.23.254' # This should be your ADSL router/modem
+
+POLICYROUTE_1_HOST_N='0' # The hosts to route according to this rule
+                         # The default route is already added
+POLICYROUTE_1_HOST_1='192.168.222.50'
+POLICYROUTE_1_HOST_2='192.168.222.150'
+POLICYROUTE_1_HOST_3='192.168.222.45'
+POLICYROUTE_1_HOST_4='192.168.222.145'
+POLICYROUTE_1_HOST_5='192.168.253.101'
+POLICYROUTE_1_HOST_6='192.168.253.102'
+
+POLICYROUTE_1_DEVICE_N='0' # The networks in IP_NET_N to give access to
+                           # Don't forget the one containing the default route
+POLICYROUTE_1_DEVICE_1='1'
+POLICYROUTE_1_DEVICE_2='2'
+POLICYROUTE_1_DEVICE_3='3'
+POLICYROUTE_1_DEVICE_4='4'
+
+POLICYROUTE_1_ROUTE_N='0' # Aditional routes following the syntax in IP_ROUTE_N
+                          # At present routes over ppp/tun devices will fail 
+						  # as they are not jet up when the script runs
+POLICYROUTE_1_ROUTE_1='192.168.56.0/24 192.168.222.45'
+POLICYROUTE_1_ROUTE_2='192.168.223.0/24 192.168.222.8'

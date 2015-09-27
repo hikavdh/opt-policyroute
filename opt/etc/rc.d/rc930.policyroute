@@ -1,0 +1,105 @@
+#!/bin/sh
+#---------------------------------------------------------------------------
+# /etc/rc.d/rc930.policyroute - configure policyroute             3.10.3
+#----------------------------------------------------------------------------
+
+begin_script POLICYROUTE "Setting up Routing Policies"
+
+case $OPT_POLICYROUTE in
+yes)
+  [ -d /etc/iproute2/ ] || mkdir /etc/iproute2/
+  echo "255   local" >> /etc/iproute2/rt_tables
+  echo "254   main" >> /etc/iproute2/rt_tables
+  echo "253   default" >> /etc/iproute2/rt_tables
+  echo "0     unspec" >> /etc/iproute2/rt_tables
+  [ 0$POLICYROUTE_N -eq 0 ] || for idx in `seq 1 $POLICYROUTE_N`
+  do
+	eval table_name='$POLICYROUTE_'$idx'_TABLE_NAME'
+	eval default_route='$POLICYROUTE_'$idx'_DEFAULT_ROUTE'
+    /usr/local/bin/colecho "Adding rules for the $table_name table ..." gn
+    echo "$((idx+6))     $table_name" >> /etc/iproute2/rt_tables
+
+    # Adding localhost and the default route
+	ip route add 127.0.0.0/8 dev lo table $table_name
+    if ! ip route add default via $default_route table $table_name > /tmp/route.$$ 2>&1
+    then
+      log_error "Error setting default route: ip route add default via $default_route table $table_name"
+      log_error < /tmp/route.$$
+    fi
+    ip route flush cache
+    if ! ip rule add from $default_route table $table_name > /tmp/route.$$ 2>&1
+    then
+      log_error "Error setting rule: ip rule add from $default_route table $table_name"
+      log_error < /tmp/route.$$
+    fi
+	
+	# Adding the hosts to the rule table
+	eval host_cnt='$POLICYROUTE_'$idx'_HOST_N'
+    [ 0$host_cnt -eq 0 ] || for idh in `seq 1 $host_cnt`
+    do
+  	  eval host='$POLICYROUTE_'$idx'_HOST_'$idh
+      if ! ip rule add from $host table $table_name > /tmp/route.$$ 2>&1
+      then
+        log_error "Error setting rule: ip rule add from $host table $table_name"
+        log_error < /tmp/route.$$
+      fi
+	done	 
+	
+	# Adding access to the given ether devices
+	eval dev_cnt='$POLICYROUTE_'$idx'_DEVICE_N'
+    [ 0$dev_cnt -eq 0 ] || for idd in `seq 1 $dev_cnt`
+    do
+  	  eval device='$POLICYROUTE_'$idx'_DEVICE_'$idd
+	  [ 0$device -le 0$IP_NET_N ] || continue
+	  eval net='$IP_NET_'$device
+	  case "$net" in
+	    '' | dhcp) continue ;;
+	  esac
+	  eval dev='$IP_NET_'$device'_DEV'
+      net_ip=`netcalc network $net`
+      net_bits=`netcalc netmaskbits $net`
+	  net=$net_ip/$net_bits
+      if ! ip route add $net dev $dev proto kernel table $table_name > /tmp/route.$$ 2>&1
+      then
+        log_error "Error setting route: ip route add $net dev $dev proto kernel table $table_name"
+        log_error < /tmp/route.$$
+      fi
+	done	 
+	
+	# Adding extra routes
+	eval route_cnt='$POLICYROUTE_'$idx'_ROUTE_N'
+    [ 0$route_cnt -eq 0 ] || for idr in `seq 1 $route_cnt`
+    do
+  	  eval route='$POLICYROUTE_'$idx'_ROUTE_'$idr
+      set $route
+      net=$1
+      gw=$2
+      case $gw in
+        @*) translate_ip_net $gw IP_ROUTE_$idx gw || continue ;;
+      esac
+
+      if netcalc isipv4 $gw
+      then
+        dev=$3
+      else
+        gw=
+        dev=$2
+      fi
+      if [ ! "$net" = "0.0.0.0/0" ]
+      then
+        [ "$gw" ] && gw="via $gw"
+        [ "$dev" ] && dev="dev $dev"
+        if ! ip route add $net $gw $dev table $table_name > /tmp/route.$$ 2>&1
+        then
+          log_error "Error setting route: ip route add $net $gw $dev"
+          log_error < /tmp/route.$$
+        fi
+      fi
+    done
+    rm -f /tmp/route.$$
+  done	 
+;;
+esac
+
+end_script
+

@@ -1,0 +1,14 @@
+#------------------------------------------------------------------------------
+#
+# fli4l 3.10.3 - extended check script for policyroute
+#
+# Creation:     2015-09-27 Hika van den Hoven <hikavdh at gmail dot com>
+# Last Update:  $$
+#
+# Copyright (c) 2015 Hika van den Hoven
+#------------------------------------------------------------------------------
+
+if (opt_policyroute)
+then
+    provides policyrouting version 3.10.3
+fi
