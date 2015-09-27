@@ -14,13 +14,13 @@ yes)
   echo "0     unspec" >> /etc/iproute2/rt_tables
   [ 0$POLICYROUTE_N -eq 0 ] || for idx in `seq 1 $POLICYROUTE_N`
   do
-	eval table_name='$POLICYROUTE_'$idx'_TABLE_NAME'
-	eval default_route='$POLICYROUTE_'$idx'_DEFAULT_ROUTE'
+    eval table_name='$POLICYROUTE_'$idx'_TABLE_NAME'
+    eval default_route='$POLICYROUTE_'$idx'_DEFAULT_ROUTE'
     /usr/local/bin/colecho "Adding rules for the $table_name table ..." gn
     echo "$((idx+6))     $table_name" >> /etc/iproute2/rt_tables
 
     # Adding localhost and the default route
-	ip route add 127.0.0.0/8 dev lo table $table_name
+    ip route add 127.0.0.0/8 dev lo table $table_name
     if ! ip route add default via $default_route table $table_name > /tmp/route.$$ 2>&1
     then
       log_error "Error setting default route: ip route add default via $default_route table $table_name"
@@ -32,45 +32,48 @@ yes)
       log_error "Error setting rule: ip rule add from $default_route table $table_name"
       log_error < /tmp/route.$$
     fi
-	
-	# Adding the hosts to the rule table
-	eval host_cnt='$POLICYROUTE_'$idx'_HOST_N'
+
+    # Adding the hosts to the rule table
+    eval host_cnt='$POLICYROUTE_'$idx'_HOST_N'
     [ 0$host_cnt -eq 0 ] || for idh in `seq 1 $host_cnt`
     do
-  	  eval host='$POLICYROUTE_'$idx'_HOST_'$idh
+        eval host='$POLICYROUTE_'$idx'_HOST_'$idh
       if ! ip rule add from $host table $table_name > /tmp/route.$$ 2>&1
       then
         log_error "Error setting rule: ip rule add from $host table $table_name"
         log_error < /tmp/route.$$
       fi
-	done	 
-	
-	# Adding access to the given ether devices
-	eval dev_cnt='$POLICYROUTE_'$idx'_DEVICE_N'
+    done
+
+    # Adding access to the given ether devices
+    eval dev_cnt='$POLICYROUTE_'$idx'_DEVICE_N'
     [ 0$dev_cnt -eq 0 ] || for idd in `seq 1 $dev_cnt`
     do
-  	  eval device='$POLICYROUTE_'$idx'_DEVICE_'$idd
-	  [ 0$device -le 0$IP_NET_N ] || continue
-	  eval net='$IP_NET_'$device
-	  case "$net" in
-	    '' | dhcp) continue ;;
-	  esac
-	  eval dev='$IP_NET_'$device'_DEV'
+        eval device='$POLICYROUTE_'$idx'_DEVICE_'$idd
+      [ 0$device -le 0$IP_NET_N ] || continue
+      eval net='$IP_NET_'$device
+      case "$net" in
+        '' | dhcp) continue ;;
+      esac
+      eval dev='$IP_NET_'$device'_DEV'
       net_ip=`netcalc network $net`
       net_bits=`netcalc netmaskbits $net`
-	  net=$net_ip/$net_bits
-      if ! ip route add $net dev $dev proto kernel table $table_name > /tmp/route.$$ 2>&1
+      len_net=${#net}
+      len_bits=${#net_bits}
+      len=$((len_net-$len_bits-1))
+      rt_ip=${net:0:$len}
+      net=$net_ip/$net_bits
+      if ! ip route add $net dev $dev proto kernel src $rt_ip table $table_name > /tmp/route.$$ 2>&1
       then
-        log_error "Error setting route: ip route add $net dev $dev proto kernel table $table_name"
+        log_error "Error setting route: ip route add $net dev $dev proto kernel src $rt_ip table $table_name"
         log_error < /tmp/route.$$
       fi
-	done	 
-	
-	# Adding extra routes
-	eval route_cnt='$POLICYROUTE_'$idx'_ROUTE_N'
+    done
+
+    eval route_cnt='$POLICYROUTE_'$idx'_ROUTE_N'
     [ 0$route_cnt -eq 0 ] || for idr in `seq 1 $route_cnt`
     do
-  	  eval route='$POLICYROUTE_'$idx'_ROUTE_'$idr
+        eval route='$POLICYROUTE_'$idx'_ROUTE_'$idr
       set $route
       net=$1
       gw=$2
@@ -97,7 +100,7 @@ yes)
       fi
     done
     rm -f /tmp/route.$$
-  done	 
+  done
 ;;
 esac
 
